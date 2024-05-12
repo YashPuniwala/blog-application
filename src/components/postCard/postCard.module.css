@@ -1,0 +1,60 @@
+.postCardContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.imgContainer {
+  width: 90%;
+  height: 400px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.imgWrapper {
+  position: relative;
+  width: 100%;
+  padding-bottom: 66.67%; /* 3:2 aspect ratio */
+  flex-shrink: 0;
+}
+
+.img {
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.postCardBottom {
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.postCardTitle {
+  font-size: 24px;
+  text-align: center;
+}
+
+.postCardDescription {
+  font-weight: 300;
+  width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  text-align: center;
+}
+
+.postCardDate {
+  font-size: 12px;
+  color: gray;
+  text-align: center;
+}
+
+.postCardLink {
+  text-decoration: underline;
+}
