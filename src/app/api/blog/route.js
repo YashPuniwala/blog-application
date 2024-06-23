@@ -3,21 +3,26 @@ import { connectToDb } from "@/lib/utils"
 import { NextResponse } from "next/server"
 
 export const GET = async (request) => {
-    try {
-      const { searchParams } = new URL(request.url);
-      const userId = searchParams.get("userId");
-  
-      await connectToDb();
-  
-      if (userId) {
-        const posts = await Post.find({ userId });
-        return NextResponse.json(posts);
-      } else {
-        const posts = await Post.find();
-        return NextResponse.json(posts);
-      }
-    } catch (error) {
-      console.log(error);
-      throw new Error("Failed to fetch Posts!");
+  try {
+    // Mark the route as dynamic to avoid static rendering issues
+    request.dynamic = 'force-dynamic';
+
+    // Parse the userId query parameter directly from the request object
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
+
+    await connectToDb();
+
+    let posts;
+    if (userId) {
+      posts = await Post.find({ userId });
+    } else {
+      posts = await Post.find();
     }
-  };
+
+    return NextResponse.json(posts);
+  } catch (error) {
+    console.log(error);
+    return NextResponse.error(new Error("Failed to fetch Posts!"));
+  }
+};
