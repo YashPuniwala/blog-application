@@ -19,15 +19,18 @@ const getData = async (slug) => {
 const SinglePostPage = async ({ params }) => {
   const { slug } = params;
 
-  // Without API
+  // Without API  
   // const post = await getPost(slug);
 
   const post = await getData(slug);
-
+  const mainImage = post.images && post.images.length > 0 ? post.images[0].imageUrl : null;
   return (
+    
     <div className={styles.container}>
       <div className={styles.imgContainer}>
-        <Image src={post.img} alt="" fill className={styles.img} />
+      {mainImage && (
+          <Image src={mainImage} alt="Post Image" layout="fill" className={styles.img} />
+        )}
       </div>
       <div className={styles.textContainer}>
         <h1 className={styles.title}>{post.title}</h1>

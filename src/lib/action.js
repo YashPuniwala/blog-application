@@ -5,6 +5,9 @@ import { Post, User } from "./models";
 import { connectToDb } from "./utils";
 import bcrypt from "bcryptjs";
 import { signIn, signOut } from "./auth";
+import crypto from "crypto";
+import { NextResponse } from "next/server";
+import sendEmail from "./sendEmail";
 
 export const handleGithubLogin = async () => {
   "use server";
@@ -156,3 +159,91 @@ export const login = async (previousState, formData) => {
     throw error;
   }
 };
+
+export const forgotPassword = async (previousState, formData) => {
+  const { email } = Object.fromEntries(formData);
+
+  try {
+    await connectToDb();
+
+    const existingUser = await User.findOne({ email });
+    if (!existingUser) {
+      return { error: "Email doesn't exist" };
+    }
+
+    const resetToken = crypto.randomBytes(20).toString("hex");
+    const passwordResetToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    const passwordTokenExpires = new Date(Date.now() + 3600000); // Expires in 1 hour
+
+    existingUser.resetToken = passwordResetToken;
+    existingUser.resetTokenExpiry = passwordTokenExpires; // Ensure this is a Date object
+    await existingUser.save(); // Save the updated user document
+
+    const resetUrl = `http://localhost:3000/resetPassword/${resetToken}`;
+
+    console.log(resetUrl, "resetUrl");
+
+    const body = `Your Password reset token is temporary:\n\n${resetUrl}\n\nIf you have not requested this email then please ignore it.`;
+
+    await sendEmail({
+      email: email,
+      subject: "Authentication Mern Password Recovery",
+      body,
+    });
+
+    return { message: "Password reset link has been sent to your email." };
+  } catch (error) {
+    console.log(error);
+    if (error.message.includes("CredentialsSignin")) {
+      return { error: "Invalid Username or Password" };
+    }
+    throw error;
+  }
+};
+
+
+export const resetPassword = async(previousState, formData) => {
+    const {token, password, confirmPassword} = Object.fromEntries(formData)
+
+    if(!password || !confirmPassword) {
+      return { error: "Please add Password" };
+    }
+
+    if(password !== confirmPassword) {
+      return {error: "Password does not match"}
+    }
+
+    const resetToken = crypto.createHash("sha256").update(token).digest("hex")
+
+    try {
+      await connectToDb()
+
+      const user = await User.findOne({
+        resetToken,
+        resetTokenExpiry: {$gt: Date.now()}
+      })
+
+      if(!user) {
+        return {error: "Reset password token is invalid or has expired"}
+      }
+
+      user.password = await bcrypt.hash(password, 10);
+      user.resetToken = undefined;
+      user.resetTokenExpiry = undefined;
+
+      await user.save()
+
+      return { message: "Password reset successfully" };
+
+    } catch (error) {
+      console.log(error);
+      if (error.message.includes("CredentialsSignin")) {
+        return { error: "Invalid Username or Password" };
+      }
+      throw error;
+    }
+}

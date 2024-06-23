@@ -9,7 +9,7 @@ const Navbar = async() => {
 
   return (
     <div className={styles.container}>
-      <Link href="/" className={styles.logo}>
+      <Link href="/" className={styles.logo} prefetch={false}>
         Logo
       </Link>
       <div>
